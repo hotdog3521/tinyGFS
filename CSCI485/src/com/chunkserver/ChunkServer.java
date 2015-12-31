@@ -23,7 +23,7 @@ import com.interfaces.ChunkServerInterface;
  */
 
 public class ChunkServer implements ChunkServerInterface {
-	final static String filePath = "csci485/";	//or C:\\newfile.txt
+	final static String filePath = "server/";	//or C:\\newfile.txt
 	public final static String ClientConfigFile = "ClientConfig.txt";
 	
 	//Used for the file system
@@ -112,13 +112,21 @@ public class ChunkServer implements ChunkServerInterface {
 	public static void ReadAndProcessRequests()
 	{
 		ChunkServer cs = new ChunkServer();
+	
+		int ServerPort = 6789; 					//client will connect here
+		ServerSocket commChanel = null;			//port listener
+		ObjectOutputStream WriteOutput = null;	//output to client
+		ObjectInputStream ReadInput = null;		//input from client
 		
-		//Used for communication with the Client via the network
-		int ServerPort = 0; //Set to 0 to cause ServerSocket to allocate the port 
-		ServerSocket commChanel = null;
-		ObjectOutputStream WriteOutput = null;
-		ObjectInputStream ReadInput = null;
 		
+		try { //set up the port listener
+			commChanel = new ServerSocket(ServerPort);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
+		/*	note: Port allocation is not required.
 		try {
 			//Allocate a port and write it to the config file for the Client to consume
 			commChanel = new ServerSocket(ServerPort);
@@ -130,17 +138,25 @@ public class ChunkServer implements ChunkServerInterface {
 			System.out.println("Error, failed to open a new socket to listen on.");
 			ex.printStackTrace();
 		}
+		*/
 		
-		boolean done = false;
-		Socket ClientConnection = null;  //A client's connection to the server
+		boolean done = false;			//has client's operation been completed
+		Socket ClientConnection = null; //connection to client
+		
 
 		while (!done){
 			try {
 				ClientConnection = commChanel.accept();
 				ReadInput = new ObjectInputStream(ClientConnection.getInputStream());
 				WriteOutput = new ObjectOutputStream(ClientConnection.getOutputStream());
+				System.out.println("[Chunkserver] Connection to client established on port " + ServerPort);
+			
+				byte[] testMessage = (byte[]) ReadInput.readObject();
+				System.out.println("[Chunkserver] Received message from client");
 				
-				//Use the existing input and output stream as long as the client is connected
+				
+				
+				/*
 				while (!ClientConnection.isClosed()) {
 					int payloadsize =  Client.ReadIntFromInputStream("ChunkServer", ReadInput);
 					if (payloadsize == -1) 
@@ -197,9 +213,12 @@ public class ChunkServer implements ChunkServerInterface {
 						System.out.println("Error in ChunkServer, specified CMD "+CMD+" is not recognized.");
 						break;
 					}
-				}
+				}*/
 			} catch (IOException ex){
-				System.out.println("Client Disconnected");
+				System.out.println("[Chunkserver] Connection to client lost.");
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			} finally {
 				try {
 					if (ClientConnection != null)

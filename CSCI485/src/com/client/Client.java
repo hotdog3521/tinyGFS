@@ -22,10 +22,11 @@ import com.interfaces.ClientInterface;
  *
  */
 public class Client implements ClientInterface {
-	static int ServerPort = 0;
-	static Socket ClientSocket;
-	static ObjectOutputStream WriteOutput;
-	static ObjectInputStream ReadInput;
+	int ServerPort = 6789;				//port number of all chunkservers.
+	String ServerIP = "localhost";		//IP address to primary chunkserver.
+	Socket socket;						//socket connection to chunkserver.
+	ObjectOutputStream WriteOutput;		//write stream to chunkserver
+	ObjectInputStream ReadInput;		//read stream to chunkserver
 	
 	public static byte[] RecvPayload(String caller, ObjectInputStream instream, int sz){
 		byte[] tmpbuf = new byte[sz];
@@ -61,28 +62,33 @@ public class Client implements ClientInterface {
 	}
 	
 	/**
-	 * Initialize the client  FileNotFoundException
+	 * Creates a new client. Establishes connection with the chunkserver using ServerIP and ServerPort.
 	 */
 	public Client(){
-		if (ClientSocket != null) return; //The client is already connected
+		if (socket != null) return; //The client is already connected
 		try {
+			/*// note: config file not required
 			BufferedReader binput = new BufferedReader(new FileReader(ChunkServer.ClientConfigFile));
 			String port = binput.readLine();
 			port = port.substring( port.indexOf(':')+1 );
 			ServerPort = Integer.parseInt(port);
+			*/
 			
-			ClientSocket = new Socket("127.0.0.1", ServerPort);
-			WriteOutput = new ObjectOutputStream(ClientSocket.getOutputStream());
-			ReadInput = new ObjectInputStream(ClientSocket.getInputStream());
-		}catch (FileNotFoundException e) {
-			System.out.println("Error (Client), the config file "+ ChunkServer.ClientConfigFile +" containing the port of the ChunkServer is missing.");
-		}catch (IOException e) {
-			System.out.println("Can't find file.");
+			socket = new Socket(ServerIP, ServerPort);
+			WriteOutput = new ObjectOutputStream(socket.getOutputStream());
+			ReadInput = new ObjectInputStream(socket.getInputStream());
+			
+			byte[] testMessage = ByteBuffer.allocate(4).putInt(101).array(); //101 to byte[4]
+			WriteOutput.writeObject(testMessage);
+			WriteOutput.flush();
+			
+		} catch(IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
 	/**
-	 * Create a chunk at the chunk server from the client side.
+	 * Send create chunk request to chunkserver. Returns chunkhandle.
 	 */
 	public String createChunk() {
 		try {
@@ -102,7 +108,7 @@ public class Client implements ClientInterface {
 	}
 	
 	/**
-	 * Write a chunk at the chunk server from the client side.
+	 * Send write chunk request to chunkserver. Returns isSuccessful.
 	 */
 	public boolean writeChunk(String ChunkHandle, byte[] payload, int offset) {
 		if(offset + payload.length > ChunkServer.ChunkSize){
@@ -131,7 +137,7 @@ public class Client implements ClientInterface {
 	}
 	
 	/**
-	 * Read a chunk at the chunk server from the client side.
+	 * Sends a read chunk request to chunkserver. Returns data.
 	 */
 	public byte[] readChunk(String ChunkHandle, int offset, int NumberOfBytes) {
 		if(NumberOfBytes + offset > ChunkServer.ChunkSize){
@@ -158,6 +164,14 @@ public class Client implements ClientInterface {
 		}
 
 		return null;
+	}
+	
+	/*
+	 * Debug: start a new client.
+	 */
+	
+	public static void main(String [] args) {
+		Client c = new Client();
 	}
 
 	
