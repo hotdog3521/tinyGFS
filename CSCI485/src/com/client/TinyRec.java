@@ -3,6 +3,7 @@ package com.client;
 public class TinyRec {
 	private byte[] payload = null;
 	private RID ID = null;
+	private int length = 0;
 	
 	public byte[] getPayload() {
 		return payload;
@@ -16,5 +17,12 @@ public class TinyRec {
 	}
 	public void setRID(RID inputID) {
 		ID = inputID;
+	}
+	
+	public int getLength(){
+		return length;
+	}
+	public void setLength(int length) {
+		this.length = length;
 	}
 }
