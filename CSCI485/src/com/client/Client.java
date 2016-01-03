@@ -40,6 +40,8 @@ public class Client implements ClientInterface {
 					InputBuff[ReadBytes+j]=tmpbuf[j];
 				}
 			} catch (IOException e) {
+				e.printStackTrace();
+				System.out.println("[Client] RecvPayload: " + caller + " " + instream + " " +sz);
 				System.out.println("Error in RecvPayload ("+caller+"), failed to read "+sz+" after reading "+ReadBytes+" bytes.");
 				return null;
 			}
@@ -67,20 +69,9 @@ public class Client implements ClientInterface {
 	public Client(){
 		if (socket != null) return; //The client is already connected
 		try {
-			/*// note: config file not required
-			BufferedReader binput = new BufferedReader(new FileReader(ChunkServer.ClientConfigFile));
-			String port = binput.readLine();
-			port = port.substring( port.indexOf(':')+1 );
-			ServerPort = Integer.parseInt(port);
-			*/
-			
 			socket = new Socket(ServerIP, ServerPort);
 			WriteOutput = new ObjectOutputStream(socket.getOutputStream());
-			ReadInput = new ObjectInputStream(socket.getInputStream());
-			
-			byte[] testMessage = ByteBuffer.allocate(4).putInt(101).array(); //101 to byte[4]
-			WriteOutput.writeObject(testMessage);
-			WriteOutput.flush();
+			ReadInput = new ObjectInputStream(socket.getInputStream());	
 			
 		} catch(IOException e) {
 			e.printStackTrace();
@@ -92,12 +83,12 @@ public class Client implements ClientInterface {
 	 */
 	public String createChunk() {
 		try {
-			WriteOutput.writeInt(ChunkServer.PayloadSZ + ChunkServer.CMDlength);
+			WriteOutput.writeInt(ChunkServer.PAYLOAD_SIZE_LENGTH + ChunkServer.COMMAND_SIZE_LENGTH);
 			WriteOutput.writeInt(ChunkServer.CreateChunkCMD);
 			WriteOutput.flush();
 			
 			int ChunkHandleSize =  ReadIntFromInputStream("Client", ReadInput);
-			ChunkHandleSize -= ChunkServer.PayloadSZ;  //reduce the length by the first four bytes that identify the length
+			ChunkHandleSize -= ChunkServer.PAYLOAD_SIZE_LENGTH;  //reduce the length by the first four bytes that identify the length
 			byte[] CHinBytes = RecvPayload("Client", ReadInput, ChunkHandleSize); 
 			return (new String(CHinBytes)).toString();
 		} catch (IOException e) {
@@ -118,7 +109,7 @@ public class Client implements ClientInterface {
 		try {
 			byte[] CHinBytes = ChunkHandle.getBytes();
 			
-			WriteOutput.writeInt(ChunkServer.PayloadSZ + ChunkServer.CMDlength + (2*4) + payload.length + CHinBytes.length);
+			WriteOutput.writeInt(ChunkServer.PAYLOAD_SIZE_LENGTH + ChunkServer.COMMAND_SIZE_LENGTH + (2*4) + payload.length + CHinBytes.length);
 			WriteOutput.writeInt(ChunkServer.WriteChunkCMD);
 			WriteOutput.writeInt(offset);
 			WriteOutput.writeInt(payload.length);
@@ -147,7 +138,7 @@ public class Client implements ClientInterface {
 		
 		try {
 			byte[] CHinBytes = ChunkHandle.getBytes();
-			WriteOutput.writeInt(ChunkServer.PayloadSZ + ChunkServer.CMDlength + (2*4) + CHinBytes.length);
+			WriteOutput.writeInt(ChunkServer.PAYLOAD_SIZE_LENGTH + ChunkServer.COMMAND_SIZE_LENGTH + (2*4) + CHinBytes.length);
 			WriteOutput.writeInt(ChunkServer.ReadChunkCMD);
 			WriteOutput.writeInt(offset);
 			WriteOutput.writeInt(NumberOfBytes);
@@ -155,7 +146,7 @@ public class Client implements ClientInterface {
 			WriteOutput.flush();
 			
 			int ChunkSize =  Client.ReadIntFromInputStream("Client", ReadInput);
-			ChunkSize -= ChunkServer.PayloadSZ;  //reduce the length by the first four bytes that identify the length
+			ChunkSize -= ChunkServer.PAYLOAD_SIZE_LENGTH;  //reduce the length by the first four bytes that identify the length
 			byte[] payload = RecvPayload("Client", ReadInput, ChunkSize); 
 			return payload;
 		} catch (IOException e) {
@@ -172,6 +163,7 @@ public class Client implements ClientInterface {
 	
 	public static void main(String [] args) {
 		Client c = new Client();
+		c.createChunk();
 	}
 
 	
