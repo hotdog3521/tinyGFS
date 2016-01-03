@@ -65,6 +65,7 @@ public class ClientRec {
 				writeSuccess = client.writeChunk(newChunkHandle, payload, lastOffset);
 			}
 		}
+		
 		if(handles == null){
 			return FSReturnVals.BadHandle;
 		}

@@ -26,6 +26,7 @@ public class UnitTest1 {
 		String dir1 = "Shahram";
 		FSReturnVals fsrv = cfs.CreateDir("/", dir1);
 		if ( fsrv != FSReturnVals.Success ){
+			System.out.println("1");
 			System.out.println("Unit test 1 result: fail!");
     		return;
 		}
