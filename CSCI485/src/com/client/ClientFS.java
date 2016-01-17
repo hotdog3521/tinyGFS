@@ -1,6 +1,16 @@
 package com.client;
 
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+
 public class ClientFS {
+	
+	//
+	static int ServerPort = 3000;
+	static Socket ClientSocket;
+	static ObjectOutputStream WriteOutput;
+	static ObjectInputStream ReadInput;
 
 	public enum FSReturnVals {
 		DirExists, // Returned by CreateDir when directory exists
