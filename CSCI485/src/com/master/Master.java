@@ -35,7 +35,6 @@ public class Master implements Runnable {
 	protected boolean isStopped = false;
 	protected ServerSocket serverSocket = null;
 	
-	//HashMap<String, ArrayList<HashMap>> file_struct = new HashMap<>();
 	HashMap<String, ArrayList<String>> file_to_chunk = new HashMap<>();
 	
 	protected int ClientAvailablePorts [];
@@ -60,64 +59,19 @@ public class Master implements Runnable {
 	}
 	
 	private int createDir(String src, String dir) {
-		File path = new File("root" + src);
-		if(!path.exists()){
-			return 0;
-		}
-		File[] list = path.listFiles();
-		for(int i = 0; i < list.length ; i ++){
-			if(list[i].getName().equals(dir)){
-				return 1;
-			}
-		}
-		
-		File newDir = new File("root" + src + dir);
-		try {
-			newDir.mkdir();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
-		
-	
-	
+
 		return 2;
 	}
 	
 	private int deleteDir(String src, String dir) {
-		File path = new File("root" + src + dir);
-		if(!path.exists()){
-			return 0;//
-		}
-		File[] list = path.listFiles();
-		if(list.length > 0){
-			return 1;//return directory not empty
-		}
-			
-		path.delete();
+
 
 		return 2;
-		
-		
-		
-		
+	
 	}
 	
 	private int renameDir(String src, String newname) {
-		File path = new File("root" + src);
-		if(!path.exists()){
-			return 0;//
-			//return src does not exist
-		}
-		
-		
-		
-		File newDir = new File("root" + newname);
-		
-		path.renameTo(newDir);
-		 
+
 	
 		return 2;
 	}
@@ -139,11 +93,7 @@ public class Master implements Runnable {
 		
 	
 		ret =  dirList.toArray(new String[dirList.size()]);
-		
-//		for(int i = 0; i < ret.length; i++)
-//		{
-//			ret[i] = src + ret[i];
-//		}
+
 		
 		System.out.println("Log: Listing directory contents..." + src);
 		
@@ -172,13 +122,6 @@ public class Master implements Runnable {
 	}
 	
 	private int createFile(String tgtdir, String filename) {
-//		if(!file_struct.containsKey(tgtdir)); //return directory does not exist
-//		ArrayList<String> v = file_struct.get(tgtdir);
-//		if(v == null) v = new ArrayList<>();
-//		v.add(filename);
-//		file_struct.put(tgtdir, v);
-//		
-//		file_to_chunk.put(tgtdir + filename, new ArrayList<String>());
 		File path = new File("root" + tgtdir);
 		if(!path.exists()){
 			return 0;//
@@ -294,20 +237,6 @@ public class Master implements Runnable {
 		
 	}
 	
-	/*
-	private void saveStructure() {
-		try {
-			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("master.txt"));
-			oos.writeObject(file_struct);
-			oos.flush();
-			oos.close();
-		} catch(IOException ioe) {
-			ioe.printStackTrace();
-		} finally {
-		}
-	}
-	*/
-	
 	private void saveChunks() {
 		try {
 			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("chunks.txt"));
@@ -319,23 +248,6 @@ public class Master implements Runnable {
 		} finally {
 		}
 	}
-	
-	/*
-	private void recoverStructure() {
-		try {
-			ObjectInputStream ois = new ObjectInputStream(new FileInputStream("master.txt"));
-			file_struct = (HashMap<String, ArrayList<String>>) ois.readObject();
-			ois.close();
-		} catch(FileNotFoundException fnfe) {
-			fnfe.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	*/
 	
 	private void recoverChunks() {
 		try {
