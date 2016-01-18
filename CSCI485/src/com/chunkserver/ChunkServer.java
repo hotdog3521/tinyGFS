@@ -36,6 +36,21 @@ public class ChunkServer implements ChunkServerInterface, Runnable {
 	public static final int CreateChunkCMD = 101;
 	public static final int ReadChunkCMD = 102;
 	public static final int WriteChunkCMD = 103;
+	public static final int AppendRecordCMD = 104;
+	public static final int DeleteRecordCMD = 105;
+	public static final int ReadFirstRecordCMD = 106;
+	public static final int ReadLastRecordCMD = 107;
+	public static final int ReadNextRecordCMD = 108;
+	public static final int ReadPrevRecordCMD = 109;
+	public static final int CreateDirCMD = 110;
+	public static final int DeleteDirCMD = 111;
+	public static final int RenameDirCMD = 112;
+	public static final int ListDirCMD = 113;
+	public static final int CreateFileCMD = 114;
+	public static final int DeleteFileCMD = 115;
+	public static final int OpenFileCMD = 116;
+	public static final int CloseFileCMD = 117;
+	
 	
 	//Replies provided by the server
 	public static final int TRUE = 1;
@@ -108,6 +123,39 @@ public class ChunkServer implements ChunkServerInterface, Runnable {
 			return null;
 		}
 	}
+	
+	public void AppendRecord() {};
+	
+	public void DeleteRecord() {};
+	
+	public void ReadFirstRecord() {};
+	
+	public void ReadLastRecord() {};
+	
+	public void ReadNextRecord() {};
+	
+	public void ReadPrevRecord() {};
+	
+	public void CreateDir(){};
+	
+	public void DeleteDir() {};
+	
+	public void RenameDir() {};
+	
+	public void ListDir() {};
+	
+	public void CreateFile() {};
+	
+	public void DeleteFile() {};
+	
+	public void RenameFile() {};
+	
+	public void ListFile() {};
+	
+	public void OpenFile() {};
+	
+	public void CloseFile() {};
+
 	
 	public static void ReadAndProcessRequests()
 	{
