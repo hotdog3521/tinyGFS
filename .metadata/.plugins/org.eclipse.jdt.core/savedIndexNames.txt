@@ -1,0 +1,17 @@
+INDEX VERSION 1.127+C:\Users\Taegyum Kim\Desktop\GFS\tinyGFS\.metadata\.plugins\org.eclipse.jdt.core
+4108727661.index
+4155206848.index
+3974580528.index
+305854171.index
+163172794.index
+1299022128.index
+30765161.index
+3133528496.index
+55782631.index
+3065916431.index
+4041092966.index
+1697886153.index
+1498219845.index
+789434026.index
+1115467115.index
+1995173708.index

@@ -22,15 +22,15 @@ import com.interfaces.ChunkServerInterface;
  *
  */
 
-public class ChunkServer implements ChunkServerInterface {
-	final static String filePath = "csci485/";	//or C:\\newfile.txt
+public class ChunkServer implements ChunkServerInterface, Runnable {
+	final static String filePath = "server/";	//or C:\\newfile.txt
 	public final static String ClientConfigFile = "ClientConfig.txt";
 	
 	//Used for the file system
 	public static long counter;
 	
-	public static int PayloadSZ = Integer.SIZE/Byte.SIZE;  //Number of bytes in an integer
-	public static int CMDlength = Integer.SIZE/Byte.SIZE;  //Number of bytes in an integer  
+	public static int PAYLOAD_SIZE_LENGTH = Integer.SIZE/Byte.SIZE;  //Number of bytes in an integer
+	public static int COMMAND_SIZE_LENGTH = Integer.SIZE/Byte.SIZE;  //Number of bytes in an integer  
 	
 	//Commands recognized by the Server
 	public static final int CreateChunkCMD = 101;
@@ -112,13 +112,21 @@ public class ChunkServer implements ChunkServerInterface {
 	public static void ReadAndProcessRequests()
 	{
 		ChunkServer cs = new ChunkServer();
+	
+		int ServerPort = 6789; 					//client will connect here
+		ServerSocket commChanel = null;			//port listener
+		ObjectOutputStream WriteOutput = null;	//output to client
+		ObjectInputStream ReadInput = null;		//input from client
 		
-		//Used for communication with the Client via the network
-		int ServerPort = 0; //Set to 0 to cause ServerSocket to allocate the port 
-		ServerSocket commChanel = null;
-		ObjectOutputStream WriteOutput = null;
-		ObjectInputStream ReadInput = null;
 		
+		try { //set up the port listener
+			commChanel = new ServerSocket(ServerPort);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
+		/*	note: Port allocation is not required.
 		try {
 			//Allocate a port and write it to the config file for the Client to consume
 			commChanel = new ServerSocket(ServerPort);
@@ -130,35 +138,49 @@ public class ChunkServer implements ChunkServerInterface {
 			System.out.println("Error, failed to open a new socket to listen on.");
 			ex.printStackTrace();
 		}
+		*/
 		
-		boolean done = false;
-		Socket ClientConnection = null;  //A client's connection to the server
+		boolean done = false;			//has client's operation been completed
+		Socket ClientConnection = null; //connection to client
+		
 
 		while (!done){
 			try {
 				ClientConnection = commChanel.accept();
 				ReadInput = new ObjectInputStream(ClientConnection.getInputStream());
 				WriteOutput = new ObjectOutputStream(ClientConnection.getOutputStream());
-				
-				//Use the existing input and output stream as long as the client is connected
-				while (!ClientConnection.isClosed()) {
-					int payloadsize =  Client.ReadIntFromInputStream("ChunkServer", ReadInput);
-					if (payloadsize == -1) 
-						break;
-					int CMD = Client.ReadIntFromInputStream("ChunkServer", ReadInput);
-					switch (CMD){
+				System.out.println("[Chunkserver] Connection to client established on port " + ServerPort);
+			
+				while(!ClientConnection.isClosed()) {
+					//0. print raw data
+					//byte[] arr = (byte[]) ReadInput.readObject();
+					//System.out.println(Arrays.toString(arr));
+					
+					//1. read total incoming array size
+					int incoming_size =  Client.ReadIntFromInputStream("ChunkServer", ReadInput);
+					if (incoming_size == -1) break;
+					System.out.println("[Chunkserver] Received payload of size " + incoming_size + " from client");
+					
+					//2. get command id
+					int command_id = Client.ReadIntFromInputStream("ChunkServer", ReadInput);
+					System.out.println("[Chunkserver] Received command " + command_id + " from client");
+					
+					//3. execute commands
+					switch (command_id){
 					case CreateChunkCMD:
+						System.out.println("[Chunkserver] Executing createChunk()");
 						String chunkhandle = cs.createChunk();
 						byte[] CHinbytes = chunkhandle.getBytes();
-						WriteOutput.writeInt(ChunkServer.PayloadSZ + CHinbytes.length);
+						WriteOutput.writeInt(ChunkServer.PAYLOAD_SIZE_LENGTH + CHinbytes.length);
 						WriteOutput.write(CHinbytes);
 						WriteOutput.flush();
 						break;
 
 					case ReadChunkCMD:
+						System.out.println("[Chunkserver] Executing readChunk()");
 						int offset =  Client.ReadIntFromInputStream("ChunkServer", ReadInput);
 						int payloadlength =  Client.ReadIntFromInputStream("ChunkServer", ReadInput);
-						int chunkhandlesize = payloadsize - ChunkServer.PayloadSZ - ChunkServer.CMDlength - (2 * 4);
+						int chunkhandlesize = incoming_size - ChunkServer.PAYLOAD_SIZE_LENGTH - ChunkServer.COMMAND_SIZE_LENGTH - (2 * 4);
 						if (chunkhandlesize < 0)
 							System.out.println("Error in ChunkServer.java, ReadChunkCMD has wrong size.");
 						byte[] CHinBytes = Client.RecvPayload("ChunkServer", ReadInput, chunkhandlesize);
@@ -167,19 +189,20 @@ public class ChunkServer implements ChunkServerInterface {
 						byte[] res = cs.readChunk(ChunkHandle, offset, payloadlength);
 						
 						if (res == null)
-							WriteOutput.writeInt(ChunkServer.PayloadSZ);
+							WriteOutput.writeInt(ChunkServer.PAYLOAD_SIZE_LENGTH);
 						else {
-							WriteOutput.writeInt(ChunkServer.PayloadSZ + res.length);
+							WriteOutput.writeInt(ChunkServer.PAYLOAD_SIZE_LENGTH + res.length);
 							WriteOutput.write(res);
 						}
 						WriteOutput.flush();
 						break;
 
 					case WriteChunkCMD:
+						System.out.println("[Chunkserver] Executing writeChunk()");
 						offset =  Client.ReadIntFromInputStream("ChunkServer", ReadInput);
 						payloadlength =  Client.ReadIntFromInputStream("ChunkServer", ReadInput);
 						byte[] payload = Client.RecvPayload("ChunkServer", ReadInput, payloadlength);
-						chunkhandlesize = payloadsize - ChunkServer.PayloadSZ - ChunkServer.CMDlength - (2 * 4) - payloadlength;
+						chunkhandlesize = incoming_size - ChunkServer.PAYLOAD_SIZE_LENGTH - ChunkServer.COMMAND_SIZE_LENGTH - (2 * 4) - payloadlength;
 						if (chunkhandlesize < 0)
 							System.out.println("Error in ChunkServer.java, WritehChunkCMD has wrong size.");
 						CHinBytes = Client.RecvPayload("ChunkServer", ReadInput, chunkhandlesize);
@@ -194,13 +217,16 @@ public class ChunkServer implements ChunkServerInterface {
 						break;
 
 					default:
-						System.out.println("Error in ChunkServer, specified CMD "+CMD+" is not recognized.");
+						System.out.println("Error in ChunkServer, specified CMD "+command_id+" is not recognized.");
 						break;
 					}
+					ClientConnection.close();
+					done = true;
 				}
+				
 			} catch (IOException ex){
-				System.out.println("Client Disconnected");
-			} finally {
+				System.out.println("[Chunkserver] Connection to client lost.");
+			}  finally {
 				try {
 					if (ClientConnection != null)
 						ClientConnection.close();
@@ -218,5 +244,11 @@ public class ChunkServer implements ChunkServerInterface {
 	public static void main(String args[])
 	{
 		ReadAndProcessRequests();
+	}
+
+	@Override
+	public void run() {
+		
+		
 	}
 }
