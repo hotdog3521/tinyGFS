@@ -7,10 +7,6 @@ import java.net.Socket;
 public class ClientFS {
 	
 	//
-	static int ServerPort = 3000;
-	static Socket ClientSocket;
-	static ObjectOutputStream WriteOutput;
-	static ObjectInputStream ReadInput;
 
 	public enum FSReturnVals {
 		DirExists, // Returned by CreateDir when directory exists
@@ -27,7 +23,9 @@ public class ClientFS {
 		Success, //Returned when a method succeeds
 		Fail //Returned when a method fails
 	}
-
+	// constructor so that it can connect to client that connect to Master and ChunkServer
+	
+	public 
 	/**
 	 * Creates the specified dirname in the src directory Returns
 	 * SrcDirNotExistent if the src directory does not exist Returns
